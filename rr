@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+. ~/.remoterunrc
+
+REL=${PWD#$SYNCROOT}
+
+function rsync_send()
+{
+	echo -e "\E[33m\033[1mRemote syncing \033[0mgolovasteek@$REMOTE_HOST:$REMOTE_DIR/"
+	rsync --delete -avzt -e ssh $SYNCROOT/ golovasteek@$REMOTE_HOST:$REMOTE_DIR/ 1>upsync.log 2>&1
+}
+
+function rsync_receive()
+{
+	echo -e "\E[33m\033[1mRemote syncing \033[0mgolovasteek@$REMOTE_HOST:$REMOTE_DIR/"
+	rsync --delete -avzt -e ssh golovasteek@$REMOTE_HOST:$REMOTE_DIR/ $SYNCROOT/ 1>downsync.log 2>&1
+}
+
+if [ "$1" != "-r" ] ; then
+    rsync_send
+    ssh -t golovasteek@$REMOTE_HOST  "cd $REMOTE_DIR/$REL; echo; $@"
+fi
+rsync_receive
