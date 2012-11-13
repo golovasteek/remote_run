@@ -18,6 +18,6 @@ function rsync_receive()
 
 if [ "$1" != "-r" ] ; then
     rsync_send
-    ssh -t golovasteek@$REMOTE_HOST  "cd $REMOTE_DIR/$REL; echo; $@"
+    ssh -t $REMOTE_HOST  "cd $REMOTE_DIR/$REL; echo; $@"
 fi
 rsync_receive
