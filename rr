@@ -16,8 +16,19 @@ function rsync_receive()
 	rsync --delete -avzt -e ssh golovasteek@$REMOTE_HOST:$REMOTE_DIR/ $SYNCROOT/ 1>downsync.log 2>&1
 }
 
+cmd_file="rr_command.sh"
+
 if [ "$1" != "-r" ] ; then
+    command=""
+    while [ -n "$1" ] ; do
+        command="$command \"$1\""
+        shift
+    done
+    echo "#!/usr/bin/env sh" > "$SYNCROOT/$REL/$cmd_file"
+    echo "$command" > "$SYNCROOT/$REL/$cmd_file" 
+    chmod +x "$SYNCROOT/$REL/$cmd_file"
+
     rsync_send
-    ssh -t $REMOTE_HOST  "cd $REMOTE_DIR/$REL; echo; $@"
+    ssh -t $REMOTE_HOST  "cd $REMOTE_DIR/$REL; echo; ./$cmd_file; rn ./$cmd_file"
 fi
 rsync_receive
