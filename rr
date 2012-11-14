@@ -29,6 +29,6 @@ if [ "$1" != "-r" ] ; then
     chmod +x "$SYNCROOT/$REL/$cmd_file"
 
     rsync_send
-    ssh -t $REMOTE_HOST  "cd $REMOTE_DIR/$REL; echo; ./$cmd_file; rn ./$cmd_file"
+    ssh -t $REMOTE_HOST  "cd $REMOTE_DIR/$REL; echo; ./$cmd_file; rm ./$cmd_file"
 fi
 rsync_receive
