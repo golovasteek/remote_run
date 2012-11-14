@@ -1,12 +1,9 @@
 #!/usr/bin/env bash -x
 
-PWD=`pwd`
+PWD=$(pwd)
 
 SCRIPT_NAME="$0"
-SCRIPT_DIR=`dirname "$SCRIPT_NAME"`
-cd "$SCRIPT_DIR"
-SCRIPT_DIR=`pwd`
-cd "$PWD"
+SCRIPT_DIR=$(dirname $(realpath "$SCRIPT_NAME"))
 
 BIN_DIR=${1:-"$HOME/bin"}
 

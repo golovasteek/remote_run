@@ -10,6 +10,6 @@ REMOTE_HOST=my.favorite.host
 #Local folder which will be syncronised befor running
 SYNCROOT=$HOME/workdir
 
-#Reomte dir to syncronise with
+#Remote dir to syncronise with
 REMOTE_DIR=$HOME/workdir/
 
