@@ -42,6 +42,9 @@ def createArgParser():
 
     others = parser.add_argument_group('Other arguments')
     others.add_argument('-h', '--help', action='help', help='show this help message and exit')
+    others.add_argument('-c', '--is-configured', action='store_true',
+        dest='isConfigured',
+        help='test if current dir is configured for rr')
 
     return parser
 
@@ -49,7 +52,7 @@ def parseArgs(argv):
     result = dict(vars(createArgParser().parse_args(argv[1:])))
 
     if len(result['command']) != 0 and (result['receiveOnly'] or result['sendOnly']):
-        raise ArgumentError('Command can not be specified if --receive-if-failed or --not-receive-if-failed flags enabled')
+        raise ArgumentError('Command can not be specified if --receive-only or --send-only flags enabled')
 
     if not (result['receiveIfFailed'] or result['notReceiveIfFailed']):
         del result['receiveIfFailed'] 

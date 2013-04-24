@@ -96,7 +96,7 @@ class IsConfiguredAction(BasicAction):
     def launch(self):
         # TODO: relaise it
         try:
-            findConfig()
+            configtools.getSettings()
             return True
         except:
             return False
@@ -107,7 +107,7 @@ def createAction(args):
         'sendOnly' : SendAction,
         'receiveOnly' : ReceiveAction,
         'command' : RemoteRunAction,
-        'is_configured' : IsConfiguredAction
+        'isConfigured' : IsConfiguredAction
     }
 
     for option, action in optionToAction.items():
