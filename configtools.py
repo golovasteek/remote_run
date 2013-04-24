@@ -53,7 +53,7 @@ def createInitialConfig():
         [main]
         
         # Url of host to sync
-        # Example: remoteHost = yandex.ru
+        # Example: remoteHost = example.com
         remoteHost =  
 
         # Path on the remote host to sync with
