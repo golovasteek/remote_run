@@ -26,7 +26,7 @@ Quick start
     git clone git://github.com/golovasteek/remote_run.git ~/bin/remote_run
     ln -s ~/bin/remote_run/rr.py ~/bin/rr
     ```
-    If ~/bin is not in your $PATH, you can add it:
+    If ~/bin is not in your $PATH you can add it:
     ```bash
     echo "export PATH+=\"~/bin:\$PATH\" >> ~/.bashrc
     . ~/.bashrc
