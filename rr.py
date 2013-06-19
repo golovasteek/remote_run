@@ -33,6 +33,8 @@ def createArgParser():
 
     options = parser.add_argument_group('Options')
     forceOptions = options.add_mutually_exclusive_group()
+    forceOptions.add_argument('-e', '--enforce-host', dest='remoteHost',
+        help='enforce to use specified host for remote running')
     forceOptions.add_argument('-f', '--receive-if-failed', action='store_true',
         dest='receiveIfFailed',
         help='if remote command failed receive data without asking')
@@ -57,6 +59,9 @@ def parseArgs(argv):
     if not (result['receiveIfFailed'] or result['notReceiveIfFailed']):
         del result['receiveIfFailed'] 
     del result['notReceiveIfFailed']
+
+    if not result['remoteHost']:
+        del result['remoteHost']
 
     return result
 
