@@ -1,15 +1,15 @@
 import configtools
 import util
 
-import shlex
+import pipes
 import os
 import sys
 
 def rsync(src, dst, logFile = 'rsync.log'):
     command = 'rsync --delete --verbose --compress --archive --times -e ssh {src}/ {dst}/  >{log} 2>&1'.format(
-        src = shlex.quote(src), 
-        dst = shlex.quote(dst),
-        log = shlex.quote(logFile))
+        src = pipes.quote(src), 
+        dst = pipes.quote(dst),
+        log = pipes.quote(logFile))
 
     print(''.join([util.colorizeInfo('Remote syncing from '), src, util.colorizeInfo(' to '), dst]), end=' ', flush=True)
     result = os.system(command) == 0
@@ -26,11 +26,11 @@ def rsyncReceive(localDir, host, remoteDir):
 
 def remoteExec(host, remoteDir, command):
     fullCommand = 'cd {remoteDir}; {command}'.format(
-        remoteDir = shlex.quote(remoteDir),
-        command = ' '.join(map(shlex.quote, command)) if command else '$SHELL')
+        remoteDir = pipes.quote(remoteDir),
+        command = ' '.join(map(pipes.quote, command)) if command else '$SHELL')
     localCommand = 'ssh -t {host} {command}'.format(
-        host = shlex.quote(host),
-        command = shlex.quote(fullCommand))
+        host = pipes.quote(host),
+        command = pipes.quote(fullCommand))
 
     print('{} {}'.format(util.colorizeInfo('Executing'), localCommand))
     return os.system(localCommand) == 0
