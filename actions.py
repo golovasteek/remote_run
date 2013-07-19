@@ -1,39 +1,11 @@
 import configtools
+import argparse
 import util
+import remote
 
-import pipes
 import os
 import sys
 
-def rsync(src, dst, logFile = 'rsync.log'):
-    command = 'rsync --delete --verbose --compress --archive --times -e ssh {src}/ {dst}/  >{log} 2>&1'.format(
-        src = pipes.quote(src), 
-        dst = pipes.quote(dst),
-        log = pipes.quote(logFile))
-
-    print(''.join([util.colorizeInfo('Remote syncing from '), src, util.colorizeInfo(' to '), dst]), end=' ', flush=True)
-    result = os.system(command) == 0
-    print(util.colorizeInfo('done') if result else util.colorizeError('failed'), flush=True)
-    return result
-
-def rsyncSend(localDir, host, remoteDir):
-    remotePath = '{}:{}'.format(host, remoteDir)
-    return rsync(localDir, remotePath, 'upsync.log')
-
-def rsyncReceive(localDir, host, remoteDir):
-    remotePath = '{}:{}'.format(host, remoteDir)
-    return rsync(remotePath, localDir, 'downsync.log')
-
-def remoteExec(host, remoteDir, command):
-    fullCommand = 'cd {remoteDir}; {command}'.format(
-        remoteDir = pipes.quote(remoteDir),
-        command = ' '.join(map(pipes.quote, command)) if command else '$SHELL')
-    localCommand = 'ssh -t {host} {command}'.format(
-        host = pipes.quote(host),
-        command = pipes.quote(fullCommand))
-
-    print('{} {}'.format(util.colorizeInfo('Executing'), localCommand))
-    return os.system(localCommand) == 0
 
 class BasicAction:
     def __init__(self, args):
@@ -42,52 +14,62 @@ class BasicAction:
     def launch(self):
         raise RuntimeError('Can not launch basic action')
 
+
 class ConfigurableAction(BasicAction):
     def __init__(self, args):
         super().__init__(args)
-        configFromFile = configtools.getSettings()
-        configFromFile.update(self.config)
-        self.config = configFromFile
+
+        config_from_file = configtools.get_settings()
+        config_from_file.update(self.config)
+        self.config = config_from_file
+
 
 class SendAction(ConfigurableAction):
     def __init__(self, args):
         super().__init__(args)
 
     def launch(self):
-        return rsyncSend(self.config['localRoot'], self.config['remoteHost'], self.config['remoteRoot'])
+        return remote.send(self.config['local_root'], self.config['remote_host'], self.config['remote_root'])
+
 
 class ReceiveAction(ConfigurableAction):
     def __init__(self, args):
         super().__init__(args)
 
     def launch(self):
-        return rsyncReceive(self.config['localRoot'], self.config['remoteHost'], self.config['remoteRoot'])
+        return remote.receive(self.config['local_root'], self.config['remote_host'], self.config['remote_root'])
 
-def _askRemoteFailed():
-    return util.queryYesNo(util.colorizeError('Remote command failed. Sync results back? '), 'yes')
+
+def _receive_if_failed(config):
+    if 'receive_if_failed' not in config or config['receive_if_failed'] == 'ask':
+        return util.ask_remote_failed()
+    else:
+        return config['receive_if_failed'] == 'yes'
+        
 
 class RemoteRunAction(ConfigurableAction):
     def __init__(self, args):
         super().__init__(args)
 
     def launch(self):
-        sent = rsyncSend(self.config['localRoot'], self.config['remoteHost'], self.config['remoteRoot'])
+        sent = remote.send(self.config['local_root'], self.config['remote_host'], self.config['remote_root'])
         
         if sent:
-            result = remoteExec(self.config['remoteHost'], self.config['remoteDir'], self.config['command'])
+            result = remote.remote_exec(self.config['remote_host'], self.config['remote_dir'], self.config['command'])
 
-            if (result or self.config['receiveIfFailed'] or 
-                    (self.config['receiveIfFailed'] == None and _askRemoteFailed())):
-                rsyncReceive(self.config['localRoot'], self.config['remoteHost'], self.config['remoteRoot'])
+            if result or _receive_if_failed(self.config):
+                remote.receive(self.config['local_root'], self.config['remote_host'], self.config['remote_root'])
             else:
-                print(util.colorizeInfo('Result not synced from server. To do it manually use') + ' `' + sys.argv[0] + ' -r`')
+                print(util.colorize_info('Result not synced from server. To do it manually use') + ' `' + sys.argv[0] + ' -r`')
+
 
 class InitAction(BasicAction):
     def __init__(self, args):
         super().__init__(args)
 
     def launch(self):
-        configtools.createInitialConfig()
+        configtools.create_initial_config()
+
 
 class IsConfiguredAction(BasicAction):
     def __init__(self, args):
@@ -96,23 +78,8 @@ class IsConfiguredAction(BasicAction):
     def launch(self):
         # TODO: relaise it
         try:
-            configtools.getSettings()
+            configtools.get_settings()
             return True
         except:
             return False
 
-def createAction(args):
-    optionToAction = {
-        'init' : InitAction,
-        'sendOnly' : SendAction,
-        'receiveOnly' : ReceiveAction,
-        'command' : RemoteRunAction,
-        'isConfigured' : IsConfiguredAction
-    }
-
-    for option, action in optionToAction.items():
-        if option in args and args[option]:
-            return action(args)
-
-    return RemoteRunAction(args)
-        
