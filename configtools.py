@@ -43,7 +43,8 @@ def parse_config(config_file):
     with open(config_file) as f:
         config_text = f.read()
 
-    config_text = '[main]\n' + config_text # Add placeholder section
+    if config_text.find('[main]') == -1:
+        config_text = '[main]\n' + config_text # Add placeholder section
 
     config_parser = configparser.ConfigParser(defaults=DEFAULTS)
     config_parser.read_string(config_text)
