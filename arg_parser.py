@@ -99,11 +99,11 @@ class RemoteRunArgParser:
     def parse(self, args):
         args = dict((k, v) 
             for k, v in vars(self._basic_parser.parse_args(args)).items()
-                if v is not None)
+                if v)
 
         if 'action' not in args:
             args['action'] = actions.RemoteRunAction
         elif 'command' in args:
-            raise ArgumentError('Command can not be specified with other action.')
+            raise argparse.ArgumentError('Command can not be specified with other action.')
 
         return args
