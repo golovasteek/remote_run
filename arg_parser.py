@@ -103,6 +103,8 @@ class RemoteRunArgParser:
 
         if 'action' not in args:
             args['action'] = actions.RemoteRunAction
+            if 'command' not in args:
+                args['command'] = []
         elif 'command' in args:
             raise argparse.ArgumentError('Command can not be specified with other action.')
 
