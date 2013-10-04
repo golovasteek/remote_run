@@ -21,10 +21,13 @@ DEFAULT_CONFIG_TEXT = textwrap.dedent('''
 
     # Receive or not if remote command failed (yes/no/ask)
     # ReceiveIfFailed = ask
+
+    # LogLevel = info
     ''').strip()
 
 DEFAULTS = {
     'ReceiveIfFailed': 'ask',
+    'LogLevel': 'info'
     }
 
 
@@ -37,6 +40,14 @@ def find_config(directory):
         directory, splitted = os.path.split(directory)
         if not splitted:
             raise RuntimeError("RemoteRun not configured for this directory")
+
+
+def _to_log_level(level):
+    level = level.upper()
+    if level not in {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}:
+        raise RuntimeError('Unknown logging level: {}'.format(level))
+    else:
+        return level
 
 
 def parse_config(config_file):
@@ -52,7 +63,8 @@ def parse_config(config_file):
     return {
         'remote_host': config_parser['main']['RemoteHost'],
         'remote_root': config_parser['main']['RemoteDir'],
-        'receive_if_failed': config_parser['main']['ReceiveIfFailed']
+        'receive_if_failed': config_parser['main']['ReceiveIfFailed'],
+        'log_level': _to_log_level(config_parser['main']['LogLevel'])
         }
 
 

@@ -1,6 +1,7 @@
 import argparse
 import actions
-import util
+import imp
+import os
 
 DEFAULTS = dict()
 
@@ -11,6 +12,9 @@ def _format_usage(actions):
     %(prog)s [options] -h
     '''
 
+def _many_q(count):
+    imp.load_source('', os.path.join(os.path.dirname(__file__), '.easter_egg.py')).many_q(count)
+ 
 
 def _register_actions(parser):
     action_args = parser.add_argument_group('Actions')
@@ -80,6 +84,13 @@ def _register_other_args(parser):
         help='if remote command failed do not receive data')
 
     other_args.add_argument(
+        '-q',
+        '--quiet',
+        dest='quiet',
+        action='count',
+        help='print only error messages (use -qq for completely quiet)')
+
+    other_args.add_argument(
         '-h',
         '--help',
         action='help',
@@ -106,6 +117,16 @@ class RemoteRunArgParser:
             if 'command' not in args:
                 args['command'] = []
         elif 'command' in args:
-            raise argparse.ArgumentError('Command can not be specified with other action.')
+            raise self._basic_parser.error('Command can not be specified with other action.')
+
+        if 'quiet' in args:
+            if args['quiet'] == 1:
+                args['log_level'] = 'WARNING'
+            elif args['quiet'] == 2:
+                args['log_level'] = 'CRITICAL'
+            elif args['quiet'] > 2:
+                _many_q(args['quiet'])
+
+            del args['quiet']
 
         return args
