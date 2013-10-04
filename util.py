@@ -1,26 +1,14 @@
+import getch
+import colors
+
 import distutils.util
-
-COLORS = dict(zip(['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'], range(30, 38)))
-
-
-def colorize(str, color = 'white', bold = False):
-    enable_seq = '\x1B[{}m'.format(COLORS[color])
-    if bold:
-        enable_seq += '\033[1m'
-    disable_seq = '\033[0m'
-
-    return '{}{}{}'.format(enable_seq, str, disable_seq)
-
-
-def colorize_info(str):
-    return colorize(str, 'yellow', True)
-
-
-def colorize_error(str):
-    return colorize(str, 'red', True)
+import sys
 
 
 def query_yes_no(question, default=None):
+    if not sys.__stdin__.isatty():
+        raise RuntimeError('Terminal is not interactive, cannot ask user "{}"'.format(question))
+
     if default == None:
         prompt = '[y/n]'
     elif distutils.util.strtobool(default):
@@ -30,14 +18,23 @@ def query_yes_no(question, default=None):
 
     while True:
         try:
-            answer = input('{} {} '.format(question, prompt))
-            if answer == '':
+            sys.stderr.write('{} {} '.format(question, prompt))
+            sys.stderr.flush()
+
+            answer = getch.getch()
+
+            if answer == '\r':
                 answer = default
+            elif answer in '\x03\x1B': # Ctrl-C, ESC
+                answer = 'no'
+
+            print("'{}'".format(answer))
+
             return distutils.util.strtobool(answer)
-        except:
-            print('Please answer with "yes" or "no".')
+        except ValueError:
+            print(colors.colorize_error('Please answer with "y/t" or "n/f"'))
 
 def ask_remote_failed():
-    return query_yes_no(colorize_error('Remote command failed. Sync results back? '), 'yes')
+    return query_yes_no(colors.colorize_error('Remote command failed. Sync results back? '), 'yes')
 
 

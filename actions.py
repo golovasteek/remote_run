@@ -3,13 +3,20 @@ import argparse
 import util
 import remote
 
+import logging
 import os
 import sys
+
+
+def _configure_logging(args):
+    if 'log_level' in args:
+        logging.getLogger().setLevel(args['log_level'])
 
 
 class BasicAction:
     def __init__(self, args):
         self.config = args
+        _configure_logging(args)
 
     def launch(self):
         raise RuntimeError('Can not launch basic action')
@@ -17,11 +24,11 @@ class BasicAction:
 
 class ConfigurableAction(BasicAction):
     def __init__(self, args):
-        super().__init__(args)
-
         config_from_file = configtools.get_settings()
-        config_from_file.update(self.config)
-        self.config = config_from_file
+        config_from_file.update(args)
+        args = config_from_file
+
+        super().__init__(args)
 
 
 class SendAction(ConfigurableAction):
@@ -42,7 +49,12 @@ class ReceiveAction(ConfigurableAction):
 
 def _receive_if_failed(config):
     if 'receive_if_failed' not in config or config['receive_if_failed'] == 'ask':
-        return util.ask_remote_failed()
+        try:
+            return util.ask_remote_failed()
+        except RuntimeError as e:
+            logging.warning(str(e))
+            logging.warning("Assume ansver is 'no'")
+            return False
     else:
         return config['receive_if_failed'] == 'yes'
         
@@ -60,7 +72,8 @@ class RemoteRunAction(ConfigurableAction):
             if result or _receive_if_failed(self.config):
                 remote.receive(self.config['local_root'], self.config['remote_host'], self.config['remote_root'])
             else:
-                print(util.colorize_info('Result not synced from server. To do it manually use') + ' `' + sys.argv[0] + ' -r`')
+                logging.warning('Result not synced from server.')
+                logging.info('To sync it manually use' + ' `' + sys.argv[0] + ' -r`')
 
 
 class InitAction(BasicAction):

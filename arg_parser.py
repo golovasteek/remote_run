@@ -1,6 +1,7 @@
 import argparse
 import actions
-import util
+import os
+import logging
 
 DEFAULTS = dict()
 
@@ -8,9 +9,7 @@ def _format_usage(actions):
     return '''
     %(prog)s [options] [<command> [<arg> ... ]]
     %(prog)s [options] <action>
-    %(prog)s [options] -h
-    '''
-
+    %(prog)s [options] -h'''
 
 def _register_actions(parser):
     action_args = parser.add_argument_group('Actions')
@@ -20,8 +19,8 @@ def _register_actions(parser):
         'command',
         nargs=argparse.REMAINDER,
         default=[],
-        metavar='COMMAND',
-        help='command to run remote (runs shell by default)')
+        metavar='<command>',
+        help='command to run remotely (runs shell by default)')
 
     exclusive_action_args.add_argument(
         '-s',
@@ -44,14 +43,21 @@ def _register_actions(parser):
         action='store_const',
         dest='action',
         const=actions.InitAction,
-        help='initialize rr in current directory')
+        help='initialize RemoteRun in current directory')
 
     exclusive_action_args.add_argument(
         '--is-configured',
         action='store_const',
         dest='action',
         const=actions.IsConfiguredAction,
-        help='test if current directory is configured for rr')
+        help='test if current directory is configured for RemoteRun')
+
+    exclusive_action_args.add_argument(
+        '--moo',
+        action='store_const',
+        dest='action',
+        const='moo',
+        help=argparse.SUPPRESS)
 
 
 def _register_other_args(parser):
@@ -79,6 +85,20 @@ def _register_other_args(parser):
         const='no',
         help='if remote command failed do not receive data')
 
+    verbose_options = other_args.add_mutually_exclusive_group()
+    verbose_options.add_argument(
+        '-q',
+        '--quiet',
+        dest='quiet',
+        action='count',
+        help='suppress info messages (-qq to suppress all messages)')
+    verbose_options.add_argument(
+        '-v',
+        '--verbose',
+        dest='verbose',
+        action='count',
+        help='increase verbosity')
+
     other_args.add_argument(
         '-h',
         '--help',
@@ -89,7 +109,7 @@ def _register_other_args(parser):
 class RemoteRunArgParser:
     def __init__(self):
         self._basic_parser = argparse.ArgumentParser(
-            description='Sync file tree to the remote host, run specified command, and sync result back.',
+            description='RemoteRun: Sync file tree to the remote host, run specified command, and sync result back.',
             usage=_format_usage(actions),
             add_help=False)
         
@@ -100,12 +120,32 @@ class RemoteRunArgParser:
         args = dict((k, v) 
             for k, v in vars(self._basic_parser.parse_args(args)).items()
                 if v)
+        _easter(args)
 
         if 'action' not in args:
             args['action'] = actions.RemoteRunAction
             if 'command' not in args:
                 args['command'] = []
         elif 'command' in args:
-            raise argparse.ArgumentError('Command can not be specified with other action.')
+            raise self._basic_parser.error('Command can not be specified with other action.')
+
+        if 'quiet' in args:
+            if args['quiet'] == 1:
+                args['log_level'] = logging.WARNING
+            elif args['quiet'] > 1:
+                args['log_level'] = logging.CRITICAL + 1
+            del args['quiet']
+        elif 'verbose' in args:
+            if args['verbose'] > 0:
+                args['log_level'] = logging.DEBUG
+            del args['verbose']
 
         return args
+
+
+
+def _easter(args):
+    if 'action' in args and args['action'] == 'moo':
+        import moo
+        moo.moo(args)
+ 
