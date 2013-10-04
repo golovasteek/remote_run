@@ -5,7 +5,7 @@ import logging
 import subprocess
 
 def rsync(src, dst):
-    options = ('--delete', '--verbose', '--compress', '--archive', '-e', 'ssh')
+    options = ('--delete', '--verbose', '--compress', '--archive', '-e', 'ssh -q')
     command = ('rsync',) + options + (src + '/', dst + '/')
 
     logging.info('Remote syncing from {} to {} '.format(src, dst))
@@ -39,7 +39,8 @@ def remote_exec(host, remote_dir, command):
     full_command = 'cd {remote_dir}; {command}'.format(
         remote_dir = pipes.quote(remote_dir),
         command = ' '.join(map(pipes.quote, command)) if command else '$SHELL')
-    local_command = 'ssh -t {host} {command}'.format(
+    local_command = 'ssh {args} -t {host} {command}'.format(
+        args = '-q' if command else '',
         host = pipes.quote(host),
         command = pipes.quote(full_command))
 
