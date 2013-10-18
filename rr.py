@@ -19,9 +19,14 @@ def main(argv):
 
     try:
         args = parse_args(argv)
-        action = args['action'](args)
     except Exception as exc:
         logging.exception(exc)
+        return 1
+        
+    try:
+        action = args['action'](args)
+    except Exception as exc:
+        logging.error(exc)
         return 1
         
     try:

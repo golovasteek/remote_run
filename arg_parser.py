@@ -1,7 +1,7 @@
 import argparse
 import actions
-import imp
 import os
+import logging
 
 DEFAULTS = dict()
 
@@ -11,10 +11,6 @@ def _format_usage(actions):
     %(prog)s [options] <action>
     %(prog)s [options] -h
     '''
-
-def _many_q(count):
-    imp.load_source('', os.path.join(os.path.dirname(__file__), '.easter_egg.py')).many_q(count)
- 
 
 def _register_actions(parser):
     action_args = parser.add_argument_group('Actions')
@@ -83,12 +79,19 @@ def _register_other_args(parser):
         const='no',
         help='if remote command failed do not receive data')
 
-    other_args.add_argument(
+    verbose_options = other_args.add_mutually_exclusive_group()
+    verbose_options.add_argument(
         '-q',
         '--quiet',
         dest='quiet',
         action='count',
-        help='print only error messages (use -qq for completely quiet)')
+        help='suppress info messages (-qq to suppress all messages)')
+    verbose_options.add_argument(
+        '-v',
+        '--verbose',
+        dest='verbose',
+        action='count',
+        help='increase verbosity')
 
     other_args.add_argument(
         '-h',
@@ -111,6 +114,7 @@ class RemoteRunArgParser:
         args = dict((k, v) 
             for k, v in vars(self._basic_parser.parse_args(args)).items()
                 if v)
+        _easter(args)
 
         if 'action' not in args:
             args['action'] = actions.RemoteRunAction
@@ -121,12 +125,21 @@ class RemoteRunArgParser:
 
         if 'quiet' in args:
             if args['quiet'] == 1:
-                args['log_level'] = 'WARNING'
-            elif args['quiet'] == 2:
-                args['log_level'] = 'CRITICAL'
-            elif args['quiet'] > 2:
-                _many_q(args['quiet'])
-
+                args['log_level'] = logging.WARNING
+            elif args['quiet'] > 1:
+                args['log_level'] = logging.CRITICAL + 1
             del args['quiet']
+        elif 'verbose' in args:
+            if args['verbose'] > 0:
+                args['log_level'] = logging.DEBUG
+            del args['verbose']
 
         return args
+
+
+
+def _easter(args):
+    if 'command' in args and args['command'] == ['moo']:
+        import imp
+        imp.load_source('', os.path.join(os.path.dirname(__file__), '.easter_egg.py')).easter(args)
+ 

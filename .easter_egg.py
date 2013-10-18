@@ -25,19 +25,38 @@ img2 = (b'eNptk8GOhCAMhu8+ReOlkEi5M/E19kTSZrOPQebZ9y+jDDqjEaT9/FtKJZqvDY8kXnl/qK
 def show(img):
     print(zlib.decompress(base64.b64decode(img)).decode('ascii'), file=sys.stderr)
 
-def many_q(count):
-    if count == 3:
-        print('Tsss...', file=sys.stderr)
-    elif count == 4:
-        print('Qu-qu!', file=sys.stderr)
-    elif count == 5:
-        print('Why do you thing I shall be so quiet?', file=sys.stderr)
-    elif count == 6:
+def easter(args):
+    if 'verbose' in args:
+        verbosity = args['verbose']
+    elif 'quiet' in args:
+        verbosity = -args['quiet']
+    else:
+        verbosity = 0
+
+    if verbosity == 0:
+        print('Maybe you confused me with apt-get?', file=sys.stderr)
+    elif verbosity == 1:
+        print('Oh, I see. You think I am aptitude.', file=sys.stderr)
+    elif verbosity == 2:
+        print('Even if you think so. "There are no Easter Eggs in this program."', file=sys.stderr)
+    elif verbosity == 3:
+        print('Maybe you should try `aptitude -vvvvv moo` to find Easter Egg?', file=sys.stderr)
+    elif verbosity == 4:
+        print('Ok, actually I have one. Should I show it?', file=sys.stderr)
+    elif verbosity == 5:
         print('Moooo!\n', file=sys.stderr)
         show(img1)
-    elif count in (7, 8, 9):
-        print('Ok, stop it.', file=sys.stderr)
-    else:
+    elif verbosity == 6:
+        print('No, no more easter eggs.', file=sys.stderr)
+    elif verbosity > 6:
+        print('No, no more easter eggs. Even if there is one more, it\'s quiet difficult to find it.', file=sys.stderr)
+    elif verbosity == -1:
+        print('Do you think Easter Egg is here?', file=sys.stderr)
+    elif verbosity == -2:
+        print('Yep, you found it.', file=sys.stderr)
+    elif verbosity == -3:
         print('Boooo!\n', file=sys.stderr)
         show(img2)
+    else:
+        print('That\'s all for today. Maybe you should go to work?', file=sys.stderr)
     exit(1)
