@@ -47,13 +47,13 @@ def easter(args):
         print('Moooo!\n', file=sys.stderr)
         show(img1)
     elif verbosity == 6:
-        print('No, no more easter eggs.', file=sys.stderr)
+        print('No, no more Easter Eggs.', file=sys.stderr)
     elif verbosity > 6:
-        print('No, no more easter eggs. Even if there is one more, it\'s quiet difficult to find it.', file=sys.stderr)
+        print('No, no more Easter Eggs. Even if there is one more, it\'s quiet difficult to find it.', file=sys.stderr)
     elif verbosity == -1:
         print('Do you think Easter Egg is here?', file=sys.stderr)
     elif verbosity == -2:
-        print('Yep, you found it.', file=sys.stderr)
+        print('Yep, you have found it.', file=sys.stderr)
     elif verbosity == -3:
         print('Boooo!\n', file=sys.stderr)
         show(img2)
