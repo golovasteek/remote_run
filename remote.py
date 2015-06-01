@@ -36,7 +36,12 @@ def receive(local_dir, host, remote_dir):
 
 
 def remote_exec(host, remote_dir, command):
-    full_command = 'cd {remote_dir}; {command}'.format(
+    remote_env = ' '.join([
+        '{}={}'.format(key[len('REMOTERUN_'):],pipes.quote(value)) for key, value in os.environ.items()
+            if key.startswith('REMOTERUN_')])
+    logging.info('remote environment: {}'.format(remote_env))
+    full_command = 'export {remote_env} > /dev/null; cd {remote_dir}; {command}'.format(
+        remote_env = remote_env,
         remote_dir = pipes.quote(remote_dir),
         command = ' '.join(map(pipes.quote, command)) if command else '$SHELL')
     local_command = 'ssh {args} -t {host} {command}'.format(
